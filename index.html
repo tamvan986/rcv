@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Rung Chuông Vàng - Tích Hợp Firebase</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+    <script type="text/javascript" src="https://me.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=NRnz1h6wGIY9VmMNllKgAqyIC8xh4QHuVODk_F__1VW1Aof2YMhe8jHTGg0VQ9A3ebVNjziRk_XOLAmltO3OfeacHbvKhuL6dhND3-GWhuh--OnAPRpLruGODOiR1-lUYmdS4ckOR_eK-59mxiJaSZ13PVrt3Fs5TNU3LCBlLoF37wtzQa0uRqqjuH9KQcQ4y20YwMhu7hjog2S4O14vCwlE-TwGpvccdQ1xM4cCQkdOT-mscc7r0qUQs017ddxmBbigPLdbipVeSd-oxadjo5V-SAkuL4TucBazY4AkIk_U-BFEz90J6oeII3YlzwmKDrmfh4caCsNznmbsXikWXH-UV92M_g3lgm7Xr_65wWM" charset="UTF-8"></script><link rel="stylesheet" crossorigin="anonymous" href="https://me.kis.v2.scr.kaspersky-labs.com/E3E8934C-235A-4B0E-825A-35A08381A191/abn/main.css?attr=aHR0cHM6Ly9jb250cmlidXRpb24udXNlcmNvbnRlbnQuZ29vZ2xlLmNvbS9kb3dubG9hZD9jPUNneGlZWEprWDNOMGIzSmhaMlVTVUJJTmNtVnpjRzl1YzJWZlpHRjBZUm9fQ2pCaU5UWmlZelE1T1dWallqazFNV1JqTURBd05qVm1NREU0TnpkaVlUWTRPREF6TnpBMU56VmxPVGd6TmpnelpERVNDeElIRU95dDBPV0ZHeGdCJmZpbGVuYW1lPVJ1bmdDaHVvbmdWYW5nX0xpdmVfSG9hbkNoaW5oLmh0bWwmb3BpPTEwMzEzNTA1MA"/><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        /* Reset & Variables */
+        * { box-sizing: border-box; }
+        :root {
+            --navy:#070f38; --navy2:#0b1a58; --card:#101f63; --card2:#0c1850;
+            --line:rgba(255,198,26,.35); --gold:#ffc61a; --gold2:#ff9d00;
+            --ink:#ffffff; --mut:#aeb9e8; --green:#2fe07c; --red:#ff5a5a;
+            --bg-stack: repeating-conic-gradient(from -90deg at 50% -18%, rgba(120,150,255,.07) 0deg 5deg, transparent 5deg 11deg), radial-gradient(1100px 620px at 50% -180px, #27409e 0%, #122470 42%, var(--navy2) 72%, var(--navy) 100%);
+            --card-bg:linear-gradient(180deg, rgba(23,42,130,.92), rgba(10,22,80,.96));
+            --qcard-bg:linear-gradient(160deg,#18297e,#0e1c5c 70%);
+            --topbar-bg:rgba(4,8,32,.72);
+            --btn-bg:rgba(16,31,99,.65);
+            --btn-hover-bg:rgba(38,58,150,.8);
+            --field-bg:#0a1440; --field-ink:#fff;
+            --ans-bg:rgba(255,255,255,.07);
+        }
+        body { font-family:"Be Vietnam Pro", system-ui, sans-serif; color:var(--ink); background:var(--bg-stack); background-color:var(--navy); min-height:100vh; margin:0; }
+        .hidden { display: none !important; }
+
+        /* Topbar & Buttons */
+        .topbar { display:flex; align-items:center; gap:14px; padding:10px 18px; background:var(--topbar-bg); border-bottom:1px solid rgba(255,198,26,.25); }
+        .logo { font-weight:900; font-size:19px; color:var(--gold); }
+        .btn { border:1.5px solid rgba(255,255,255,.35); background:var(--btn-bg); color:var(--ink); border-radius:999px; padding:8px 16px; font-weight:700; font-size:14px; cursor:pointer; }
+        .btn:hover { background:var(--btn-hover-bg); }
+        .btn.gold { background:linear-gradient(180deg,var(--gold),var(--gold2)); color:#231a00; border-color:#ffe27a; }
+        .btn.danger { border-color:rgba(255,90,90,.6); }
+        .btn.big { font-size:16px; padding:11px 22px; }
+
+        /* Layout */
+        .stage { max-width:1460px; margin:18px auto 40px; padding:0 16px; }
+        .stage-card { background:var(--card-bg); border:1.5px solid var(--line); border-radius:20px; padding:22px 24px; box-shadow:0 24px 60px rgba(0,0,0,.5); }
+
+        /* Question Card */
+        .qcard { background:var(--qcard-bg); border:1.5px solid rgba(120,150,255,.35); border-radius:16px; padding:24px 26px; min-height:238px; margin-bottom: 20px;}
+        .qlabel { color:var(--gold); font-weight:800; font-size:15px; text-transform:uppercase; }
+        .qtext { font-size:clamp(21px,2.5vw,32px); font-weight:800; line-height:1.35; margin:12px 0; }
+        .answers { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px; }
+        .ans { display:flex; gap:10px; align-items:center; background:var(--ans-bg); border:1.5px solid rgba(255,255,255,.22); border-radius:12px; padding:11px 14px; font-weight:600; cursor:pointer; }
+        .ans .letter { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--gold); color:#231a00; font-weight:900; }
+        .ans.correct { background:rgba(47,224,124,.18); border-color:var(--green); }
+        .ans.correct .letter { background:var(--green); color:#04240f; }
+
+        /* Modals & Inputs */
+        .overlay { position:fixed; inset:0; background:rgba(2,4,20,.78); z-index:80; display:flex; align-items:flex-start; justify-content:center; padding:28px 14px; overflow-y:auto; }
+        .modal { background:linear-gradient(180deg,#16267a,#0d1a56); border:1.5px solid var(--line); border-radius:18px; width:100%; max-width:640px; padding:24px; }
+        .modal h2 { margin:0 0 6px; color:var(--gold); }
+        .field { margin-bottom:14px; text-align: left; }
+        .field label { display:block; font-size:13.5px; font-weight:700; margin-bottom:6px; color: #dbe2ff;}
+        .field input, .field textarea { width:100%; background:var(--field-bg); color:var(--field-ink); border:1.5px solid rgba(255,255,255,.28); border-radius:10px; padding:10px 12px; font-family:inherit; }
+
+        /* Role Screen */
+        .role-card { width:100%; max-width:560px; text-align:center; margin:auto; background:var(--card-bg); border:1.5px solid var(--line); border-radius:22px; padding:34px 28px; }
+        .role-btn { display:block; width:100%; text-align:left; margin-bottom:12px; padding:16px 18px; border-radius:16px; border:1.5px solid rgba(255,255,255,.3); background:rgba(255,255,255,.06); color:var(--ink); font-size:18px; font-weight:800; cursor:pointer; }
+        .role-btn.gold { background:linear-gradient(180deg,var(--gold),var(--gold2)); color:#231a00; }
+        .role-btn:hover { filter: brightness(1.1); }
+
+        /* Race List */
+        .race-list { display:grid; grid-template-columns:1fr; gap:10px; margin-top: 20px; }
+        .race-row { display:flex; align-items:center; gap:10px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;}
+        .race-name { font-weight: 700; flex: 1; text-align: left; }
+        .race-ans { font-weight: 900; color: var(--gold); padding: 4px 12px; background: rgba(255,255,255,0.1); border-radius: 6px; }
+        
+        /* Utils */
+        .sub { color:var(--mut); font-size:14.5px; margin-bottom:16px; line-height:1.55; }
+        .actions { display:flex; gap:9px; flex-wrap:wrap; margin-top:18px; }
+        .close-x { float:right; }
+    </style>
+</head>
+<body>
+    <!-- MÀN HÌNH CHỌN VAI TRÒ -->
+    <div class="overlay" id="roleScreen">
+        <div class="role-card">
+            <h1 style="color:var(--gold); font-size: 38px; margin-top: 0;">🔔 RUNG CHUÔNG VÀNG</h1>
+            <p style="color:var(--mut); margin-bottom: 20px;">Bạn vào game với vai trò nào?</p>
+            <button class="role-btn gold" onclick="switchView('teacherApp')">🎓 Giáo viên / Máy chủ</button>
+            <button class="role-btn" onclick="switchView('studentApp')">📱 Học sinh tham gia</button>
+            <button class="role-btn" onclick="document.getElementById('modalFirebase').classList.remove('hidden')">🔥 Cài đặt Firebase</button>
+        </div>
+    </div>
+
+    <!-- MÀN HÌNH CÀI ĐẶT FIREBASE -->
+    <div class="overlay hidden" id="modalFirebase">
+        <div class="modal wide">
+            <button class="btn close-x" onclick="document.getElementById('modalFirebase').classList.add('hidden')">✕ Đóng</button>
+            <h2>🔥 Cài đặt Firebase</h2>
+            <div class="sub">Chế độ chơi bằng điện thoại dùng Firebase Realtime Database để đồng bộ thời gian thực.</div>
+            <div class="field">
+                <label>Dán toàn bộ đoạn firebaseConfig của bạn vào đây:</label>
+                <textarea id="fbCfgText" rows="9" placeholder='const firebaseConfig = { ... };'></textarea>
+            </div>
+            <p id="fbStatus" class="sub" style="font-weight: bold;">Chưa có cấu hình nào được lưu.</p>
+            <div class="actions">
+                <button class="btn gold" id="btnFbSave">💾 Lưu cấu hình</button>
+                <button class="btn" id="btnFbTest">🔌 Kiểm tra kết nối</button>
+                <button class="btn danger" id="btnFbDelete">🗑 Xóa cấu hình</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GIAO DIỆN GIÁO VIÊN -->
+    <div id="teacherApp" class="hidden">
+        <header class="topbar">
+            <div class="logo">🔔 Rung Chuông Vàng</div>
+            <button class="btn gold" onclick="createRoom()">Tạo phòng thi</button>
+            <button class="btn" onclick="document.getElementById('modalFirebase').classList.remove('hidden')">🔥 Cài đặt Firebase</button>
+            <div style="flex:1"></div>
+            <button class="btn" onclick="location.reload()">⇄ Đổi vai trò</button>
+        </header>
+
+        <main class="stage">
+            <div class="stage-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 style="color:var(--gold); margin: 0;">MÃ PHÒNG: <span id="teacherPin" style="font-size:32px; letter-spacing:4px; color:#fff;">---</span></h2>
+                    <span style="color:var(--mut);" id="roomStats">Chưa có học sinh</span>
+                </div>
+                
+                <div class="qcard" style="margin-top: 20px;">
+                    <div class="qlabel">Bảng Điều Khiển Câu Hỏi</div>
+                    <div class="field" style="margin-top: 15px;">
+                        <input type="text" id="teacherQText" placeholder="Nhập nội dung câu hỏi muốn gửi cho lớp..." style="font-size: 18px; padding: 15px;">
+                    </div>
+                    <div class="actions">
+                        <button class="btn gold big" onclick="sendQuestion()">▶ Phát câu hỏi tới Học sinh</button>
+                        <button class="btn big" onclick="clearAnswers()">Xóa đáp án đã chọn</button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 style="color:var(--mut)">🏁 DANH SÁCH HỌC SINH ĐANG TRẢ LỜI</h3>
+                    <div class="race-list" id="teacherPlayerList">
+                        <div class="race-row" style="opacity: 0.5;">Chưa có học sinh tham gia...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- GIAO DIỆN HỌC SINH -->
+    <div id="studentApp" class="hidden">
+        <header class="topbar" style="justify-content: center;">
+            <div class="logo">📱 Máy Con - Học Sinh</div>
+        </header>
+        
+        <main class="stage" style="max-width: 600px;">
+            <div class="stage-card" id="stuLoginBox">
+                <h2 style="color:var(--gold); text-align:center; margin-top: 0;">Vào Phòng Thi</h2>
+                <div class="field">
+                    <label>Mã PIN (Giáo viên cung cấp)</label>
+                    <input type="text" id="stuPin" placeholder="VD: 123456" style="text-align:center; font-size:24px; letter-spacing: 4px; font-weight: bold;">
+                </div>
+                <div class="field">
+                    <label>Tên của bạn</label>
+                    <input type="text" id="stuName" placeholder="Nhập họ tên...">
+                </div>
+                <button class="btn gold big" style="width:100%; margin-top: 15px;" onclick="joinRoom()">Vào Sàn Thi Đấu</button>
+                <p id="stuError" style="color:var(--red); text-align:center; margin-top:10px; font-weight: bold;"></p>
+            </div>
+
+            <div class="stage-card hidden" id="stuPlayBox">
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 15px; margin-bottom: 15px;">
+                    <b id="stuDisplayMyName" style="font-size: 18px;">---</b>
+                    <span style="color:var(--gold); font-weight: bold;">Phòng: <span id="stuDisplayPin">---</span></span>
+                </div>
+
+                <div class="qcard" style="min-height: auto; padding: 20px;">
+                    <div class="qlabel">Câu hỏi hiện tại</div>
+                    <div class="qtext" id="stuQText" style="font-size: 22px; margin-top: 10px;">Đang chờ giáo viên ra câu hỏi...</div>
+                </div>
+
+                <div class="answers">
+                    <div class="ans" onclick="submitAnswer('A')"><div class="letter">A</div> Chọn đáp án A</div>
+                    <div class="ans" onclick="submitAnswer('B')"><div class="letter">B</div> Chọn đáp án B</div>
+                    <div class="ans" onclick="submitAnswer('C')"><div class="letter">C</div> Chọn đáp án C</div>
+                    <div class="ans" onclick="submitAnswer('D')"><div class="letter">D</div> Chọn đáp án D</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        let db;
+        let currentRoomCode = "";
+        let myPlayerId = "";
+
+        // --- 1. KHỞI TẠO VÀ CHUYỂN ĐỔI MÀN HÌNH ---
+        function switchView(viewId) {
+            if (viewId === 'studentApp' || viewId === 'teacherApp') {
+                if (!db) {
+                    alert("Vui lòng Cài đặt Firebase trước khi bắt đầu!");
+                    document.getElementById('modalFirebase').classList.remove('hidden');
+                    return;
+                }
+            }
+            document.getElementById('roleScreen').classList.add('hidden');
+            document.getElementById(viewId).classList.remove('hidden');
+            if (viewId === 'studentApp') document.body.style.backgroundColor = 'var(--navy)';
+        }
+
+        window.onload = () => {
+            const savedCfg = localStorage.getItem('rcv_fb_cfg');
+            if (savedCfg) {
+                try {
+                    firebase.initializeApp(JSON.parse(savedCfg));
+                    db = firebase.database();
+                    document.getElementById('fbStatus').innerText = "✅ Đã có cấu hình được lưu trong máy.";
+                    document.getElementById('fbStatus').style.color = "var(--green)";
+                    document.getElementById('fbCfgText').value = savedCfg;
+                } catch(e) { console.error("Firebase Init Error:", e); }
+            }
+        };
+
+        // --- 2. QUẢN LÝ FIREBASE MODAL ---
+        document.getElementById('btnFbSave').addEventListener('click', () => {
+            const rawText = document.getElementById('fbCfgText').value;
+            try {
+                let cleanText = rawText.replace(/const\s+firebaseConfig\s*=\s*/g, '').replace(/;/g, '').trim();
+                const configObj = eval('(' + cleanText + ')');
+                localStorage.setItem('rcv_fb_cfg', JSON.stringify(configObj));
+                
+                document.getElementById('fbStatus').innerText = "✅ Đã lưu cấu hình! Vui lòng F5 (tải lại trang) để áp dụng.";
+                document.getElementById('fbStatus').style.color = "var(--green)";
+            } catch(e) {
+                document.getElementById('fbStatus').innerText = "❌ Cấu hình sai định dạng. Hãy copy đúng đoạn const firebaseConfig = {...}";
+                document.getElementById('fbStatus').style.color = "var(--red)";
+            }
+        });
+
+        document.getElementById('btnFbTest').addEventListener('click', () => {
+            if (!db) {
+                document.getElementById('fbStatus').innerText = "⚠️ Chưa khởi tạo Firebase. Hãy lưu cấu hình và F5 tải lại trang trước.";
+                document.getElementById('fbStatus').style.color = "var(--gold)";
+                return;
+            }
+            document.getElementById('fbStatus').innerText = "⏳ Đang kiểm tra kết nối...";
+            db.ref('.info/connected').once('value').then(snap => {
+                if (snap.val() === true) {
+                    document.getElementById('fbStatus').innerText = "✅ Kết nối Firebase thành công! Hệ thống sẵn sàng.";
+                    document.getElementById('fbStatus').style.color = "var(--green)";
+                } else {
+                    document.getElementById('fbStatus').innerText = "❌ Không thể kết nối. Hãy kiểm tra lại Database URL hoặc mạng.";
+                    document.getElementById('fbStatus').style.color = "var(--red)";
+                }
+            });
+        });
+
+        document.getElementById('btnFbDelete').addEventListener('click', () => {
+            if (confirm("Bạn có chắc muốn xóa cấu hình Firebase đã lưu trên máy này?")) {
+                localStorage.removeItem('rcv_fb_cfg');
+                document.getElementById('fbCfgText').value = "";
+                document.getElementById('fbStatus').innerText = "Chưa có cấu hình nào được lưu.";
+                document.getElementById('fbStatus').style.color = "var(--mut)";
+                alert("Đã xóa cấu hình. Hãy F5 tải lại trang để ngắt kết nối cũ.");
+            }
+        });
+
+        // --- 3. LOGIC GIÁO VIÊN ---
+        function createRoom() {
+            currentRoomCode = Math.floor(100000 + Math.random() * 900000).toString();
+            document.getElementById('teacherPin').innerText = currentRoomCode;
+            
+            db.ref('rooms/' + currentRoomCode).set({
+                question: 'Mời các em ổn định vị trí, chuẩn bị thi đấu!',
+                timestamp: Date.now()
+            });
+
+            db.ref('rooms/' + currentRoomCode + '/players').on('value', snapshot => {
+                const players = snapshot.val();
+                const listEl = document.getElementById('teacherPlayerList');
+                listEl.innerHTML = '';
+                
+                let count = 0;
+                if (players) {
+                    for (let id in players) {
+                        count++;
+                        let ans = players[id].answer || "...";
+                        let color = ans !== "..." ? "var(--green)" : "var(--mut)";
+                        let border = ans !== "..." ? `1px solid ${color}` : "none";
+                        listEl.innerHTML += `
+                            <div class="race-row">
+                                <div class="race-name">${players[id].name}</div>
+                                <div class="race-ans" style="color: ${color}; border: ${border}; min-width: 40px; text-align: center;">${ans}</div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    listEl.innerHTML = '<div class="race-row" style="opacity: 0.5;">Chưa có học sinh tham gia...</div>';
+                }
+                document.getElementById('roomStats').innerText = `Đang có ${count} học sinh`;
+            });
+            alert("Đã tạo phòng thành công! Hãy báo mã PIN cho học sinh.");
+        }
+
+        function sendQuestion() {
+            if (!currentRoomCode) return alert("Thầy cần tạo phòng trước!");
+            const q = document.getElementById('teacherQText').value;
+            if (!q) return alert("Vui lòng nhập câu hỏi!");
+
+            db.ref('rooms/' + currentRoomCode).update({ question: q });
+            clearAnswers();
+        }
+
+        function clearAnswers() {
+            if (!currentRoomCode) return;
+            db.ref('rooms/' + currentRoomCode + '/players').once('value', snapshot => {
+                snapshot.forEach(child => {
+                    child.ref.update({ answer: "" });
+                });
+            });
+        }
+
+        // --- 4. LOGIC HỌC SINH ---
+        function joinRoom() {
+            const pin = document.getElementById('stuPin').value.trim();
+            const name = document.getElementById('stuName').value.trim();
+            
+            if (!pin || !name) {
+                document.getElementById('stuError').innerText = "Vui lòng nhập đủ Mã PIN và Tên!";
+                return;
+            }
+
+            db.ref('rooms/' + pin).once('value', snapshot => {
+                if (snapshot.exists()) {
+                    currentRoomCode = pin;
+                    
+                    const playerRef = db.ref('rooms/' + currentRoomCode + '/players').push();
+                    playerRef.set({ name: name, answer: "" });
+                    myPlayerId = playerRef.key;
+
+                    document.getElementById('stuLoginBox').classList.add('hidden');
+                    document.getElementById('stuPlayBox').classList.remove('hidden');
+                    document.getElementById('stuDisplayMyName').innerText = name;
+                    document.getElementById('stuDisplayPin').innerText = pin;
+
+                    db.ref('rooms/' + currentRoomCode + '/question').on('value', qSnap => {
+                        document.getElementById('stuQText').innerText = qSnap.val();
+                        document.querySelectorAll('.ans').forEach(el => {
+                            el.style.borderColor = 'rgba(255,255,255,.22)';
+                            el.style.background = 'var(--ans-bg)';
+                        });
+                    });
+                } else {
+                    document.getElementById('stuError').innerText = "Phòng không tồn tại! Hãy kiểm tra lại mã PIN.";
+                }
+            });
+        }
+
+        function submitAnswer(ans) {
+            if (!currentRoomCode || !myPlayerId) return;
+            
+            db.ref('rooms/' + currentRoomCode + '/players/' + myPlayerId).update({
+                answer: ans
+            });
+            
+            document.querySelectorAll('.ans').forEach(el => {
+                el.style.borderColor = 'rgba(255,255,255,.22)';
+                el.style.background = 'var(--ans-bg)';
+            });
+            event.currentTarget.style.borderColor = 'var(--gold)';
+            event.currentTarget.style.background = 'rgba(255,198,26,.18)';
+        }
+    </script>
+</body>
+</html>
